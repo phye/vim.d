@@ -45,7 +45,13 @@ Justin Cheevers @justincheevers
 Talha Ahmed (@talha81) <talha.ahmed@gmail.com>
 Matthew Tylee Atkinson (@matatk)
 Pedro Ferrari (@petobens)
+Daniel Hahler (@blueyed)
 Dave Honneffer (@pearofducks)
-
+Bagrat Aznauryan (@n9code)
+Tomoyuki Kashiro (@kashiro)
+Tommy Allen (@tweekmonster)
+Mingliang (@Aulddays)
+Brian Mego (@brianmego)
+Stevan Milic (@stevanmilic) <stevan.milic@yahoo.com>
 
 @something are github user names.

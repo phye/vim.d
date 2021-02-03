@@ -1,10 +1,10 @@
 let mapleader = '\'
 source plugin/jedi.vim
-source test/utils.vim
+source test/_utils.vim
 
-describe 'goto_simple'
+describe 'goto simple:'
     before
-        new  " open a new split
+        new
         set filetype=python
         put =[
         \   'def a(): pass',
@@ -20,98 +20,78 @@ describe 'goto_simple'
         bd!
     end
 
-    it 'goto_definitions'
-        silent normal \d
-        Expect line('.') == 1
-        "Expect col('.') == 5  " not working yet.
+    it 'goto definitions'
+        normal \d
+        Expect line('.') == 2
+        Expect col('.') == 1
     end
 
-    it 'goto_assignments'
-        silent normal \g
+    it 'goto assignments'
+        normal \g
         Expect line('.') == 2
         Expect col('.') == 1
 
         " cursor before `=` means that it stays there.
-        silent normal \g
+        normal \g
         Expect line('.') == 2
         Expect col('.') == 1
 
         " going to the last line changes it.
         normal! $
-        silent normal \g
+        normal \g
         Expect line('.') == 1
         Expect col('.') == 5
     end
 end
 
 
-describe 'goto_with_tabs'
+describe 'goto with tabs:'
     before
         set filetype=python
+        let g:jedi#use_tabs_not_buffers = 1
     end
 
     after
-        bd!
-        bd!
+        try | %bwipeout! | catch | endtry
     end
 
-    it 'follow_import'
+    it 'follow import'
         put = ['import subprocess', 'subprocess']
-        silent normal G\g
+        normal G\g
         Expect getline('.') == 'import subprocess'
         Expect line('.') == 2
         Expect col('.') == 8
 
-        silent normal G\d
+        normal G\d
         Expect CurrentBufferIsModule('subprocess') == 1
         Expect line('.') == 1
         Expect col('.') == 1
         Expect tabpagenr('$') == 2
         Expect winnr('$') == 1
-        tabprevious
+        bwipe
+
+        Expect tabpagenr('$') == 1
         Expect bufname('%') == ''
-    end
-
-    it 'multi_definitions'
-        " This used to behave differently. Now we don't have any real multi
-        " definitions.
-        
-        " put = ['import tokenize']
-        " silent normal G$\d
-        " Expect CurrentBufferIsModule('tokenize') == 1
-        " Expect CurrentBufferIsModule('token') == 0
-        " execute "normal \<CR>"
-        " Expect tabpagenr('$') == 2
-        " Expect winnr('$') == 1
-        " Expect CurrentBufferIsModule('token') == 1
-
-        " bd
-        " silent normal G$\d
-        " execute "normal j\<CR>"
-        " Expect tabpagenr('$') == 2
-        " Expect winnr('$') == 1
-        " Expect CurrentBufferIsModule('tokenize') == 1
     end
 end
 
 
-describe 'goto_with_buffers'
+describe 'goto with buffers'
     before
         set filetype=python
         let g:jedi#use_tabs_not_buffers = 0
     end
 
     after
-        bd!
-        bd!
+        try | %bwipeout! | catch | endtry
         set nohidden
     end
 
-    it 'no_new_tabs'
+    it 'no new tabs'
         put = ['import os']
         normal G$
         call jedi#goto_assignments()
-        python jedi_vim.goto()
+        python3 jedi_vim.goto()
         Expect CurrentBufferIsModule('os') == 0
         " Without hidden, it's not possible to open a new buffer, when the old
         " one is not saved.
@@ -123,48 +103,29 @@ describe 'goto_with_buffers'
         Expect line('.') == 1
         Expect col('.') == 1
     end
-
-    it 'multi_definitions'
-        " set hidden
-        " put = ['import tokenize']
-        " silent normal G$\d
-        " Expect CurrentBufferIsModule('tokenize') == 0
-        " Expect CurrentBufferIsModule('token') == 0
-        " execute "normal \<CR>"
-        " Expect tabpagenr('$') == 1
-        " Expect winnr('$') == 1
-        " Expect CurrentBufferIsModule('token') == 1
-
-        " bd
-        " silent normal G$\d
-        " execute "normal j\<CR>"
-        " Expect tabpagenr('$') == 1
-        " Expect winnr('$') == 1
-        " Expect CurrentBufferIsModule('tokenize') == 1
-    end
 end
 
 
 
-describe 'goto_with_splits'
+describe 'goto with splits'
     before
+        enew!
         set filetype=python
         let g:jedi#use_splits_not_buffers = 'left'
     end
 
     after
-        bd!
-        bd!
+        try | %bwipeout! | catch | endtry
     end
 
-    it 'follow_import'
+    it 'follow import'
         put = ['import subprocess', 'subprocess']
-        silent normal G\g
+        normal G\g
         Expect getline('.') == 'import subprocess'
         Expect line('.') == 2
         Expect col('.') == 8
 
-        silent normal G\d
+        normal G\d
         Expect CurrentBufferIsModule('subprocess') == 1
         Expect line('.') == 1
         Expect col('.') == 1
@@ -173,6 +134,43 @@ describe 'goto_with_splits'
         Expect bufname('%') == ''
     end
 
+end
+
+
+describe 'goto wildignore'
+    before
+        enew!
+        set filetype=python
+        set wildignore=*,with\ spaces,*.pyc
+        set hidden
+        let g:jedi#use_tag_stack = 1
+        let g:jedi#use_tabs_not_buffers = 0
+        " Need to use splits for code coverage in new_buffer()
+        let g:jedi#use_splits_not_buffers = 1
+
+        put = ['from subprocess import Popen', 'Popen']
+        Expect CurrentBufferIsModule('subprocess') == 0
+        normal G
+    end
+
+    after
+        try | %bwipeout! | catch | endtry
+        set wildignore&vim
+    end
+
+    it 'restores wildignore'
+        let before = &wildignore
+        call jedi#goto()
+        Expect getline('.') =~ 'Popen'
+        Expect &wildignore == before
+    end
+
+    it 'not using tagstack'
+        let g:jedi#use_tag_stack = 0
+        call jedi#goto()
+        Expect CurrentBufferIsModule('subprocess') == 1
+        Expect getline('.') =~ 'Popen'
+    end
 end
 
 

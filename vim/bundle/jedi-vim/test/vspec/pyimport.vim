@@ -1,10 +1,15 @@
 source plugin/jedi.vim
-source test/utils.vim
+source test/_utils.vim
 
 describe 'pyimport'
+    before
+        let g:jedi#use_tabs_not_buffers = 1
+        let g:jedi#project_path = 'autoload'
+    end
+
     after
-        bd!
-        bd!
+        try | %bwipeout! | catch | endtry
+        unlet g:jedi#project_path
     end
 
     it 'open_tab'
@@ -23,6 +28,7 @@ describe 'pyimport'
 
         Expect jedi#py_import_completions('subproc', 0, 0) == 'subprocess'
         Expect jedi#py_import_completions('subprocess', 0, 0) == 'subprocess'
-        Expect jedi#py_import_completions('zip', 0, 0) == "zipfile\nzipimport"
+        let g:comp = jedi#py_import_completions('sre_', 0, 0)
+        Expect g:comp == "sre_compile\nsre_constants\nsre_parse"
     end
 end
