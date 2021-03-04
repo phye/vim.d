@@ -22,6 +22,7 @@ set tw=100
 set colorcolumn=100
 set wfh
 set wfw
+let g:go_version_warning = 0
 
 " }}}
 
