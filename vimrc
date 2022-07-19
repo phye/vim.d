@@ -97,7 +97,7 @@ nnoremap <leader>ast :set tags+=/ws/phye/stl/tags<cr>
 nnoremap <F2> : set invpaste paste?<CR>
 set pastetoggle=<F2>
 
-inoremap jk <ESC>
+inoremap fd <ESC>
 "inoremap <ESC> <nop>
 " }}}
 
